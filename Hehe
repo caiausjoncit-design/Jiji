@@ -564,7 +564,7 @@ Tab2:AddToggle({
                                     obj.HoldDuration = 0
                                 end
                                 obj:InputHoldBegin()
-                                task.wait(0.03)
+                                task.wait(3)
                                 obj:InputHoldEnd()
                                 fireproximityprompt(obj)
                             end)
