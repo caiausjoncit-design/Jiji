@@ -532,12 +532,12 @@ Section:AddToggle({
     end
 })
 OrionLib:Init()
-Tab2:AddToggle({
-    Name = "Auto Elmano",
+Tab:AddToggle({
+    Name = "Auto elmano ",
     Default = false,
     Callback = function(v)
         getgenv().AntiDie = v
-        
+
         if v then
             -- ====================== GODMODE + TELEPORT ======================
             spawn(function()
@@ -548,33 +548,6 @@ Tab2:AddToggle({
                         char.HumanoidRootPart.CFrame = CFrame.new(548.273987, 482.597839, -300.462952)
                         char.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
                     end
-                end
-            end)
-
-            -- ====================== FIRE ALL PROXIMITY PROMPTS ======================
-            spawn(function()
-                local Players = game:GetService("Players")
-                local player = Players.LocalPlayer
-
-                local function fireAllProximityPrompts()
-                    for _, obj in ipairs(workspace:GetDescendants()) do
-                        if obj:IsA("ProximityPrompt") then
-                            pcall(function()
-                                if obj.HoldDuration > 0 then
-                                    obj.HoldDuration = 0
-                                end
-                                obj:InputHoldBegin()
-                                task.wait(3)
-                                obj:InputHoldEnd()
-                                fireproximityprompt(obj)
-                            end)
-                        end
-                    end
-                end
-
-                while getgenv().AntiDie do
-                    pcall(fireAllProximityPrompts)
-                    task.wait(4) -- Có thể chỉnh thành 3 hoặc 5 tùy game
                 end
             end)
 
@@ -597,6 +570,100 @@ Tab2:AddToggle({
                     task.wait(0.1)
                 end
             end)
+
+            -- ====================== AUTO FIRE PROXIMITY PROMPT (TỐI ƯU) ======================
+            spawn(function()
+                local Players = game:GetService("Players")
+                local RunService = game:GetService("RunService")
+
+                local player = Players.LocalPlayer
+                local character = player.Character or player.CharacterAdded:Wait()
+                local rootPart = character:WaitForChild("HumanoidRootPart")
+
+                local RANGE = 50
+                local prompts = {}
+                local connections = {}
+
+                local function isInRange(prompt)
+                    if not prompt or not prompt.Parent then return false end
+                    local root = rootPart
+                    if not root then return false end
+
+                    local promptPos = nil
+                    if prompt.Adornee then
+                        promptPos = prompt.Adornee.Position
+                    elseif prompt.Parent:IsA("BasePart") then
+                        promptPos = prompt.Parent.Position
+                    else
+                        local part = prompt.Parent:FindFirstChildWhichIsA("BasePart")
+                        if part then
+                            promptPos = part.Position
+                        end
+                    end
+
+                    if promptPos then
+                        return (promptPos - root.Position).Magnitude <= RANGE
+                    end
+                    return false
+                end
+
+                local function firePrompt(prompt)
+                    pcall(function()
+                        prompt.HoldDuration = 0
+                        prompt:InputHoldBegin()
+                        task.wait(0.03)
+                        prompt:InputHoldEnd()
+                    end)
+                end
+
+                -- Heartbeat loop
+                local heartbeatConn = RunService.Heartbeat:Connect(function()
+                    if not rootPart or not rootPart.Parent then return end
+                    
+                    for _, prompt in ipairs(prompts) do
+                        if prompt and prompt.Parent and isInRange(prompt) then
+                            firePrompt(prompt)
+                        end
+                    end
+                end)
+                table.insert(connections, heartbeatConn)
+
+                -- Thu thập prompt hiện có
+                for _, obj in ipairs(workspace:GetDescendants()) do
+                    if obj:IsA("ProximityPrompt") then
+                        table.insert(prompts, obj)
+                    end
+                end
+
+                -- Tự động thêm prompt mới
+                local descendantConn = workspace.DescendantAdded:Connect(function(desc)
+                    if desc:IsA("ProximityPrompt") then
+                        table.insert(prompts, desc)
+                    end
+                end)
+                table.insert(connections, descendantConn)
+
+                -- Cập nhật character khi respawn
+                local charAddedConn = player.CharacterAdded:Connect(function(newChar)
+                    character = newChar
+                    rootPart = newChar:WaitForChild("HumanoidRootPart")
+                end)
+                table.insert(connections, charAddedConn)
+
+                print("🔥 Auto Fire ProximityPrompt trong 50 studs đã bật!")
+
+                -- Giữ script chạy đến khi tắt toggle
+                while getgenv().AntiDie do
+                    task.wait(1)
+                end
+
+                -- Cleanup khi tắt
+                for _, conn in ipairs(connections) do
+                    if conn then conn:Disconnect() end
+                end
+                prompts = {}
+            end)
+
         end
     end
 })
