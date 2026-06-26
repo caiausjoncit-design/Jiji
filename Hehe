@@ -19,7 +19,7 @@ local Tab2 = Window:MakeTab({
 	Icon = "rbxassetid://4483345998",
 	PremiumOnly = false
 })
-local AutoFarm = true
+local AutoFarm = false
 
 local LockRemote = game:GetService("ReplicatedStorage")
     :WaitForChild("Packages")
@@ -37,7 +37,7 @@ local function GetTarget()
     if not world then return nil end
 
     local bossFolder = workspace.Misc:FindFirstChild("MobSpawnInfo")
-    local mobFolder = world:FindFirstChild("Event Mobs")
+    local mobFolder = world:FindFirstChild("Mobs")
     local eventFolder = world:FindFirstChild("Boss Mobs")
 
     -- Boss trước
@@ -81,7 +81,7 @@ end
 
 Tab:AddToggle({
     Name = "Auto farm OP",
-    Default = true,
+    Default = false,
     Callback = function(v)
         AutoFarm = v
 
@@ -328,6 +328,9 @@ spawn(function()
         wait(0.1)
     end
 end)
+local Section = Tab:AddSection({
+    Name = "Auto Farm Orb"
+})
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -477,9 +480,7 @@ Tab:AddToggle({
 })
 
 
-local Section = Tab:AddSection({
-    Name = "Auto Farm Orb"
-})
+
 
 local AutoFarmEnabled = false 
 
@@ -802,3 +803,42 @@ Tab2:AddToggle({
         end
     end
 })
+getgenv().AutoPickedItemWeekend = false
+local RANGE = 20 -- Phạm vi fire prompt
+
+Tab2:AddToggle({
+    Name = "Auto Picked Item Weekend",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoPickedItemWeekend = Value
+
+        task.spawn(function()
+            while getgenv().AutoPickedItemWeekend do
+                local player = game:GetService("Players").LocalPlayer
+                local character = player.Character
+                local root = character and character:FindFirstChild("HumanoidRootPart")
+
+                if root then
+                    for _, prompt in ipairs(workspace:GetDescendants()) do
+                        if prompt:IsA("ProximityPrompt") then
+                            local part = prompt.Parent
+
+                            if part and part:IsA("BasePart") then
+                                if (root.Position - part.Position).Magnitude <= RANGE then
+                                    pcall(function()
+                                        prompt.HoldDuration = 0
+                                        fireproximityprompt(prompt)
+                                    end)
+                                end
+                            end
+                        end
+                    end
+                end
+
+                task.wait(1.5)
+            end
+        end)
+    end
+})
+
+OrionLib:Init()
