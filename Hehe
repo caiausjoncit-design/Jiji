@@ -532,7 +532,7 @@ Section:AddToggle({
     end
 })
 OrionLib:Init()
-Tab:AddToggle({
+Tab2:AddToggle({
     Name = "Auto elmano ",
     Default = false,
     Callback = function(v)
@@ -655,6 +655,141 @@ Tab:AddToggle({
                 -- Giữ script chạy đến khi tắt toggle
                 while getgenv().AntiDie do
                     task.wait(1)
+                end
+
+                -- Cleanup khi tắt
+                for _, conn in ipairs(connections) do
+                    if conn then conn:Disconnect() end
+                end
+                prompts = {}
+            end)
+
+        end
+    end
+})
+Tab2:AddToggle({
+    Name = "Auto Veggy",
+    Default = false,
+    Callback = function(v)
+        getgenv().AntiDie = v
+
+        if v then
+            -- ====================== GODMODE + TELEPORT ======================
+            spawn(function()
+                while getgenv().AntiDie do
+                    task.wait()
+                    local char = game.Players.LocalPlayer.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") then
+                        char.HumanoidRootPart.CFrame = CFrame.new(1908.68518, 32.0015411, 355.360748, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                        char.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+                    end
+                end
+            end)
+
+            -- ====================== AUTO SKILL REMOTE ======================
+            spawn(function()
+                while getgenv().AntiDie do
+                    local args = {
+                        {
+                            Camera = CFrame.new(74.2727279663086, 251.0009002685547, -28.747745513916016, -0.9511321783065796, -0.044049736112356186, 0.3056260347366333, 0, 0.9897724390029907, 0.14265543222427368, -0.308784157037735, 0.13568417727947235, -0.9414043426513672),
+                            SkillId = "1",
+                            Began = true,
+                            CFrame = CFrame.new(70.45240020751953, 247.81771850585938, -16.98019027709961, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+                            ["Typ\208\181"] = 1,
+                            Aim = Vector3.new(70.45240020751953, 247.81771850585938, -66.98019409179688)
+                        }
+                    }
+                    pcall(function()
+                        game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SkillRemote"):FireServer(unpack(args))
+                    end)
+                    task.wait(0.1)
+                end
+            end)
+
+            -- ====================== AUTO FIRE PROXIMITY PROMPT (TỐI ƯU) ======================
+            spawn(function()
+                local Players = game:GetService("Players")
+                local RunService = game:GetService("RunService")
+
+                local player = Players.LocalPlayer
+                local character = player.Character or player.CharacterAdded:Wait()
+                local rootPart = character:WaitForChild("HumanoidRootPart")
+
+                local RANGE = 50
+                local prompts = {}
+                local connections = {}
+
+                local function isInRange(prompt)
+                    if not prompt or not prompt.Parent then return false end
+                    local root = rootPart
+                    if not root then return false end
+
+                    local promptPos = nil
+                    if prompt.Adornee then
+                        promptPos = prompt.Adornee.Position
+                    elseif prompt.Parent:IsA("BasePart") then
+                        promptPos = prompt.Parent.Position
+                    else
+                        local part = prompt.Parent:FindFirstChildWhichIsA("BasePart")
+                        if part then
+                            promptPos = part.Position
+                        end
+                    end
+
+                    if promptPos then
+                        return (promptPos - root.Position).Magnitude <= RANGE
+                    end
+                    return false
+                end
+
+                local function firePrompt(prompt)
+                    pcall(function()
+                        prompt.HoldDuration = 0
+                        prompt:InputHoldBegin()
+                        task.wait(3)
+                        prompt:InputHoldEnd()
+                    end)
+                end
+
+                -- Heartbeat loop
+                local heartbeatConn = RunService.Heartbeat:Connect(function()
+                    if not rootPart or not rootPart.Parent then return end
+                    
+                    for _, prompt in ipairs(prompts) do
+                        if prompt and prompt.Parent and isInRange(prompt) then
+                            firePrompt(prompt)
+                        end
+                    end
+                end)
+                table.insert(connections, heartbeatConn)
+
+                -- Thu thập prompt hiện có
+                for _, obj in ipairs(workspace:GetDescendants()) do
+                    if obj:IsA("ProximityPrompt") then
+                        table.insert(prompts, obj)
+                    end
+                end
+
+                -- Tự động thêm prompt mới
+                local descendantConn = workspace.DescendantAdded:Connect(function(desc)
+                    if desc:IsA("ProximityPrompt") then
+                        table.insert(prompts, desc)
+                    end
+                end)
+                table.insert(connections, descendantConn)
+
+                -- Cập nhật character khi respawn
+                local charAddedConn = player.CharacterAdded:Connect(function(newChar)
+                    character = newChar
+                    rootPart = newChar:WaitForChild("HumanoidRootPart")
+                end)
+                table.insert(connections, charAddedConn)
+
+                print("🔥 Auto Fire ProximityPrompt trong 50 studs đã bật!")
+
+                -- Giữ script chạy đến khi tắt toggle
+                while getgenv().AntiDie do
+                    task.wait(2)
                 end
 
                 -- Cleanup khi tắt
