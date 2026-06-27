@@ -1054,6 +1054,9 @@ Tab3:AddToggle({
 		end)
 	end
 })
+local Section = Tab2:AddSection({
+    Name = "equip weapin"
+})
 local SelectedTool = 2
 local AutoEquipTools = false
 
@@ -1096,4 +1099,6 @@ Tab2:AddToggle({
 		end
 	end
 })
-
+local Section = Tab:AddSection({
+    Name = "Droid"
+})
