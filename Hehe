@@ -1057,7 +1057,7 @@ Tab3:AddToggle({
 local SelectedTool = 2
 local AutoEquipTools = false
 
-local Dropdown = Tab8:AddDropdown({
+local Dropdown = Tab2:AddDropdown({
 	Name = "Auto equiptools dls",
 	Default = "2",
 	Options = {"1","2","3","4","5","6"},
@@ -1096,7 +1096,7 @@ Tab8:AddToggle({
 		end
 	end
 })
-local AutoGun = false
+
 local Section = Tab2:AddSection({
 	Name = "Check time boss"
 })
