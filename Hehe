@@ -1066,7 +1066,7 @@ local Dropdown = Tab2:AddDropdown({
 	end
 })
 
-Tab8:AddToggle({
+Tab2:AddToggle({
 	Name = "Auto EquipTools",
 	Default = false,
 	Callback = function(Value)
@@ -1097,7 +1097,7 @@ Tab8:AddToggle({
 	end
 })
 
-local Section = Tab2:AddSection({
+local Section = Tab3:AddSection({
 	Name = "Check time boss"
 })
 
