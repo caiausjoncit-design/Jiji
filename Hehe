@@ -1124,8 +1124,8 @@ local AutoTeleport = true
 local AutoBring = true
 
 -- Toggle
-Tab2:AddToggle({Name = "Auto Teleport Boss Order", Default = true, Callback = function(v) AutoTeleport = v end})
-Tab2:AddToggle({Name = "Auto Bring Boss", Default = true, Callback = function(v) AutoBring = v end})
+Tab2:AddToggle({Name = "Auto Teleport Boss Order", Default = false, Callback = function(v) AutoTeleport = v end})
+Tab2:AddToggle({Name = "Auto Bring Boss", Default = false, Callback = function(v) AutoBring = v end})
 
 -- Khóa người chơi khi teleport
 local function LockPlayer(state)
@@ -1198,3 +1198,103 @@ LocalPlayer.CharacterAdded:Connect(function(newChar)
     Character = newChar
     Root = newChar:WaitForChild("HumanoidRootPart")
 end)
+local AutoFarm = false
+
+local LockRemote = game:GetService("ReplicatedStorage")
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_knit@1.4.7")
+    :WaitForChild("knit")
+    :WaitForChild("Services")
+    :WaitForChild("SkillManager")
+    :WaitForChild("RE")
+    :WaitForChild("LockedOnChanged")
+
+-- Hàm tìm mob
+local function GetTarget()
+    local world = workspace:FindFirstChild("World Mobs")
+    if not world then return nil end
+
+    local bossFolder = workspace.Misc:FindFirstChild("MobSpawnInfo")
+    local mobFolder = world:FindFirstChild("Event Mobs")
+    local eventFolder = world:FindFirstChild("Boss Mobs")
+
+    -- Boss trước
+    if bossFolder then
+        for _, v in pairs(bossFolder:GetChildren()) do
+            local hum = v:FindFirstChild("Humanoid")
+            if v:FindFirstChild("HumanoidRootPart")
+            and hum
+            and hum.Health > 0 then
+                return v
+            end
+        end
+    end
+
+    -- Event Mob
+    if eventFolder then
+        for _, v in pairs(eventFolder:GetChildren()) do
+            local hum = v:FindFirstChild("Humanoid")
+            if v:FindFirstChild("HumanoidRootPart")
+            and hum
+            and hum.Health > 0 then
+                return v
+            end
+        end
+    end
+
+    -- Mob thường
+    if mobFolder then
+        for _, v in pairs(mobFolder:GetChildren()) do
+            local hum = v:FindFirstChild("Humanoid")
+            if v:FindFirstChild("HumanoidRootPart")
+            and hum
+            and hum.Health > 0 then
+                return v
+            end
+        end
+    end
+
+    return nil
+end
+
+Tab2:AddToggle({
+    Name = "Auto Zaja",
+    Default = false,
+    Callback = function(v)
+        AutoFarm = v
+
+        task.spawn(function()
+            while AutoFarm do
+                pcall(function()
+                    local target = GetTarget()
+
+                    if target then
+                        -- Lock vào target hiện tại
+                        LockRemote:FireServer(target)
+
+                        local pos = target.HumanoidRootPart.Position
+
+                        local args = {
+                            {
+                                Camera = workspace.CurrentCamera.CFrame,
+                                SkillId = "101",
+                                Began = true,
+                                CFrame = CFrame.new(pos),
+                                ["Typ\208\181"] = 1,
+                                Aim = pos
+                            }
+                        }
+
+                        game:GetService("ReplicatedStorage")
+                            :WaitForChild("Remotes")
+                            :WaitForChild("SkillRemote")
+                            :FireServer(unpack(args))
+                    end
+                end)
+
+                task.wait(0.01)
+            end
+        end)
+    end
+})
