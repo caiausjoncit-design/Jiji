@@ -43,7 +43,7 @@ local function GetTarget()
 
     local bossFolder = workspace.Misc:FindFirstChild("MobSpawnInfo")
     local mobFolder = world:FindFirstChild("Event Mobs")
-    local eventFolder = world:FindFirstChild("Boss Mobs")
+    local eventFolder = world:FindFirstChild("???")
 
     -- Boss trước
     if bossFolder then
